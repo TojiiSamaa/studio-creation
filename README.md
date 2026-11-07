@@ -5,7 +5,7 @@
 Les mains de *La Création d'Adam* (Michel-Ange, domaine public), une pièce qui tourne entre elles, des néons.
 Un seul fichier HTML, sans serveur ni compte : on règle, on exporte un **SVG autonome sans script** qui s'anime tout seul dans un README GitHub.
 
-**▶ Ouvrir le studio : <https://tojiisamaa.github.io/studio-creation/>**
+**Ouvrir le studio : <https://tojiisamaa.github.io/studio-creation/>**
 
 ![Le studio](docs/studio.png)
 
