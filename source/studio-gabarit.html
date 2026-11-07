@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Création Studio</title>
+<style>
+  :root {
+    --fond: #0b0c0f; --panneau: #111318; --surface: #181b21; --surface-2: #20242c; --trait: #272b34;
+    --texte: #e9ecf1; --texte-2: #a7aebb; --texte-3: #7f8796;
+    --accent: #e0805f; --accent-texte: #1a0f0a; --accent-doux: rgba(224,128,95,.14);
+    --toile-a: #121317; --toile-b: #0d0e11; --vert: #3fb950;
+    --e1: 4px; --e2: 8px; --e3: 12px; --e4: 16px; --e5: 24px;
+    --t-xs: 11px; --t-s: 12px; --t-m: 13px; --t-l: 15px;
+    --r-s: 6px; --r-m: 8px; --r-l: 12px;
+    --mono: ui-monospace, 'Cascadia Code', Consolas, monospace;
+    --sans: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+    color-scheme: dark;
+  }
+  :root[data-theme="clair"] {
+    --fond: #eef0f3; --panneau: #ffffff; --surface: #f5f6f8; --surface-2: #eaecf0; --trait: #dfe2e8;
+    --texte: #14161b; --texte-2: #4a5260; --texte-3: #6b7383;
+    --accent: #b4532f; --accent-texte: #ffffff; --accent-doux: rgba(180,83,47,.1);
+    --toile-a: #e4e6ea; --toile-b: #d9dce1; --vert: #1a7f37;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--fond); color: var(--texte); font: var(--t-m)/1.45 var(--sans);
+    display: grid; grid-template: 52px 1fr / 252px minmax(0, 1fr) 320px; overflow: hidden; }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .ico { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  header { grid-column: 1 / -1; display: flex; align-items: center; gap: var(--e2); padding: 0 var(--e4); background: var(--panneau); border-bottom: 1px solid var(--trait); }
+  .marque { display: flex; align-items: baseline; gap: var(--e2); margin-right: auto; }
+  .marque b { font-size: var(--t-l); letter-spacing: -.01em; }
+  .marque span { color: var(--texte-3); font-size: var(--t-s); }
+  .btn { height: 32px; padding: 0 var(--e3); border-radius: var(--r-m); border: 1px solid var(--trait); background: var(--surface); display: inline-flex; align-items: center; gap: 6px; font-size: var(--t-s); white-space: nowrap; transition: background-color .15s, border-color .15s; }
+  .btn:hover { background: var(--surface-2); }
+  .btn.plein { background: var(--accent); border-color: var(--accent); color: var(--accent-texte); font-weight: 600; }
+  .btn.plein:hover { filter: brightness(1.06); }
+  .btn.carre { width: 32px; padding: 0; justify-content: center; }
+  .btn.discret { border-color: transparent; background: transparent; }
+  .btn.discret:hover { background: var(--surface-2); }
+  .sep { width: 1px; height: 20px; background: var(--trait); margin: 0 var(--e1); }
+  .retour { font: var(--t-xs) var(--mono); color: var(--vert); }
+
+  nav { background: var(--panneau); border-right: 1px solid var(--trait); display: flex; flex-direction: column; min-height: 0; }
+  .onglets { display: flex; gap: 2px; padding: var(--e2); border-bottom: 1px solid var(--trait); }
+  .onglets button { flex: 1; height: 30px; border: 0; border-radius: var(--r-s); background: transparent; color: var(--texte-2); font-size: var(--t-s); font-weight: 600; }
+  .onglets button[aria-selected="true"] { background: var(--surface-2); color: var(--texte); }
+  .defile { overflow-y: auto; min-height: 0; flex: 1; padding: var(--e2); }
+  .calque { width: 100%; display: flex; align-items: center; gap: var(--e3); padding: 8px var(--e3); border: 0; border-radius: var(--r-m); background: transparent; text-align: left; }
+  .calque:hover { background: var(--surface); }
+  .calque[aria-current="true"] { background: var(--accent-doux); }
+  .calque .ico { color: var(--texte-3); }
+  .calque[aria-current="true"] .ico { color: var(--accent); }
+  .miroir { transform: scaleX(-1); }
+  .calque b { display: block; font-weight: 600; }
+  .calque small { display: block; color: var(--texte-3); font-size: var(--t-xs); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
+  .titre-section { font: 600 var(--t-xs) var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--texte-3); margin: var(--e4) var(--e2) var(--e2); }
+  .titre-section:first-child { margin-top: var(--e1); }
+  .cartes { display: grid; gap: var(--e2); }
+  .carte { position: relative; border: 1px solid var(--trait); border-radius: var(--r-m); background: var(--surface); padding: 0; overflow: hidden; text-align: left; transition: border-color .15s; }
+  .carte:hover { border-color: var(--texte-3); }
+  .carte img { display: block; width: 100%; aspect-ratio: 12 / 5; object-fit: cover; background: #000; }
+  .carte > span { display: block; padding: 6px var(--e2); font-size: var(--t-s); font-weight: 600; }
+  .carte .suppr { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: var(--r-s); background: rgba(0,0,0,.65); color: #fff; display: grid; place-items: center; opacity: 0; transition: opacity .15s; }
+  .carte:hover .suppr, .carte .suppr:focus-visible { opacity: 1; }
+  .ligne { display: flex; gap: var(--e2); }
+  .ligne > input { flex: 1; min-width: 0; }
+  .vide { color: var(--texte-3); font-size: var(--t-s); padding: 0 var(--e2); margin: 0; }
+  .pied-nav { padding: var(--e2); border-top: 1px solid var(--trait); display: grid; gap: 6px; }
+  .pied-nav .btn { justify-content: center; }
+
+  main { min-width: 0; min-height: 0; display: flex; flex-direction: column; padding: var(--e5); gap: var(--e3); overflow: auto; }
+  .toile { flex: 1; min-height: 240px; display: grid; place-items: center; border-radius: var(--r-l); background: repeating-conic-gradient(var(--toile-a) 0 25%, var(--toile-b) 0 50%) 0 0 / 20px 20px; padding: var(--e5); }
+  #apercu { width: 100%; max-width: 1200px; }
+  #apercu svg { display: block; width: 100%; height: auto; max-height: calc(100vh - 230px); border-radius: var(--r-m); }
+  #apercu [data-calque] { cursor: pointer; }
+  .lecture { display: flex; align-items: center; gap: var(--e2); background: var(--panneau); border: 1px solid var(--trait); border-radius: var(--r-l); padding: 6px var(--e2); }
+  .lecture input[type=range] { flex: 1; }
+  .mono { font: var(--t-xs) var(--mono); color: var(--texte-3); white-space: nowrap; }
+  .astuce { color: var(--texte-3); font-size: var(--t-s); margin: 0; }
+
+  aside { background: var(--panneau); border-left: 1px solid var(--trait); overflow-y: auto; min-height: 0; }
+  .entete-insp { display: flex; align-items: center; gap: var(--e2); padding: var(--e3) var(--e4); border-bottom: 1px solid var(--trait); position: sticky; top: 0; background: var(--panneau); z-index: 1; }
+  .entete-insp h2 { margin: 0; font-size: var(--t-l); }
+  .entete-insp .ico { color: var(--accent); }
+  .groupe { border-bottom: 1px solid var(--trait); }
+  .tete { display: flex; align-items: center; gap: var(--e2); padding: 4px var(--e3) 4px var(--e2); }
+  .plier { flex: 1; display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 var(--e2); border: 0; border-radius: var(--r-s); background: none; font-weight: 600; font-size: var(--t-s); text-align: left; }
+  .plier:hover:not(:disabled) { background: var(--surface); }
+  .plier:disabled { cursor: default; color: var(--texte-3); }
+  .plier .ico { width: 14px; height: 14px; color: var(--texte-3); transition: transform .15s; }
+  .plier[aria-expanded="false"] .ico { transform: rotate(-90deg); }
+  .corps { display: grid; gap: 6px; padding: 0 var(--e4) var(--e3); }
+  .rangee { display: grid; grid-template-columns: 84px minmax(0, 1fr); align-items: center; gap: var(--e2); min-height: 30px; }
+  .rangee.inter { grid-template-columns: 1fr auto; cursor: pointer; }
+  .nom { color: var(--texte-2); font-size: var(--t-s); }
+  .ctrl { min-width: 0; }
+  .seg { display: flex; gap: 2px; padding: 2px; background: var(--surface); border: 1px solid var(--trait); border-radius: var(--r-s); }
+  .seg button { flex: 1 1 0; min-width: 0; height: 24px; padding: 0 4px; border: 0; border-radius: 4px; background: transparent; color: var(--texte-2); font-size: var(--t-s); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .seg button:hover { color: var(--texte); }
+  .seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--texte); font-weight: 600; box-shadow: inset 0 0 0 1px var(--trait); }
+  select { width: 100%; height: 28px; padding: 0 var(--e2); border: 1px solid var(--trait); border-radius: var(--r-s); background: var(--surface); font: inherit; font-size: var(--t-s); color: var(--texte); }
+  .curseur { display: grid; grid-template-columns: minmax(0, 1fr) 44px; align-items: center; gap: var(--e2); }
+  .curseur output { font: var(--t-xs) var(--mono); color: var(--texte-2); text-align: right; }
+  input[type=range] { width: 100%; accent-color: var(--accent); margin: 0; }
+  input[role=switch] { appearance: none; width: 30px; height: 18px; border-radius: 9px; background: var(--surface-2); border: 1px solid var(--trait); position: relative; margin: 0; cursor: pointer; transition: background-color .15s; flex: none; }
+  input[role=switch]::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--texte-3); transition: transform .15s, background-color .15s; }
+  input[role=switch]:checked { background: var(--accent); border-color: var(--accent); }
+  input[role=switch]:checked::after { transform: translateX(12px); background: #fff; }
+  .puce { width: 100%; height: 28px; display: flex; align-items: center; gap: var(--e2); padding: 0 var(--e2) 0 4px; border: 1px solid var(--trait); border-radius: var(--r-s); background: var(--surface); font: var(--t-xs) var(--mono); color: var(--texte); }
+  .puce i { width: 20px; height: 20px; border-radius: 4px; box-shadow: inset 0 0 0 1px rgba(128,128,128,.4); }
+  .puce .ico { margin-left: auto; width: 14px; height: 14px; color: var(--texte-3); transition: transform .15s; }
+  .puce[aria-expanded="true"] { border-color: var(--accent); }
+  .puce[aria-expanded="true"] .ico { transform: rotate(180deg); }
+  .palette { display: grid; gap: var(--e2); padding: var(--e2); border: 1px solid var(--trait); border-radius: var(--r-m); background: var(--surface); }
+  .perso { display: grid; grid-template-columns: minmax(0, 1fr) 80px; gap: 6px; }
+  .perso input[type=color] { width: 100%; height: 28px; padding: 0; border: 1px solid var(--trait); border-radius: var(--r-s); background: none; cursor: pointer; }
+  .perso .hex { height: 28px; padding: 0 var(--e2); border: 1px solid var(--trait); border-radius: var(--r-s); background: var(--panneau); font: var(--t-s) var(--mono); }
+  .pastilles { display: flex; gap: 4px; }
+  .pastille { flex: 1 1 0; min-width: 0; aspect-ratio: 1; max-width: 26px; padding: 0; border: 0; border-radius: 5px; background: var(--c); box-shadow: inset 0 0 0 1px rgba(128,128,128,.4); }
+  .pastille.marque { position: relative; }
+  .pastille.marque::after { content: ''; position: absolute; inset: auto 3px 3px auto; width: 6px; height: 6px; border-radius: 50%; background: var(--panneau); box-shadow: 0 0 0 1px var(--trait); }
+  .pastille[aria-pressed="true"] { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .note { color: var(--texte-3); font-size: var(--t-xs); margin: 0; }
+  .logo-actuel { display: flex; align-items: center; gap: var(--e3); padding: var(--e2); border: 1px solid var(--trait); border-radius: var(--r-m); background: var(--surface); }
+  .logo-actuel svg { width: 26px; height: 26px; flex: none; }
+  .logo-actuel b { display: block; }
+  .recherche { position: relative; }
+  .recherche .ico { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--texte-3); }
+  .recherche input, .champ-texte { width: 100%; height: 32px; padding: 0 var(--e3) 0 32px; border-radius: var(--r-s); border: 1px solid var(--trait); background: var(--surface); }
+  .champ-texte { padding-left: var(--e3); }
+  .resultats { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; max-height: 200px; overflow-y: auto; }
+  .resultats button { aspect-ratio: 1; border: 1px solid transparent; border-radius: var(--r-s); background: var(--surface); padding: 6px; display: grid; place-items: center; color: var(--texte); }
+  .resultats button:hover { border-color: var(--texte-3); }
+  .resultats button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-doux); }
+  .resultats img, .resultats svg { width: 100%; height: 100%; }
+  :root:not([data-theme="clair"]) .resultats img { filter: invert(1); }
+
+  @media (max-width: 1000px) {
+    body { display: block; overflow: auto; }
+    header { position: sticky; top: 0; z-index: 2; flex-wrap: wrap; height: auto; padding: var(--e2) var(--e4); }
+    nav, aside { border: 0; border-bottom: 1px solid var(--trait); }
+    .defile { max-height: 320px; }
+    main { padding: var(--e4); }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="marque"><b>Création</b><span>studio de bannières SVG animées</span></div>
+  <span class="retour" id="retour" aria-live="polite"></span>
+  <span class="mono" id="poids"></span>
+  <button class="btn carre discret" id="theme" aria-label="Changer de thème"></button>
+  <span class="sep"></span>
+  <button class="btn" id="lien"><svg class="ico"><use href="#i-lien"/></svg>Lien de partage</button>
+  <button class="btn" id="copierMd">Markdown</button>
+  <button class="btn" id="copierSvg"><svg class="ico"><use href="#i-copier"/></svg>SVG</button>
+  <button class="btn plein" id="telecharger"><svg class="ico"><use href="#i-telecharger"/></svg>Télécharger</button>
+</header>
+
+<nav>
+  <div class="onglets" role="tablist">
+    <button role="tab" aria-selected="true" data-onglet="calques">Éléments</button>
+    <button role="tab" aria-selected="false" data-onglet="presets">Préréglages</button>
+  </div>
+  <div class="defile" id="p-calques"></div>
+  <div class="defile" id="p-presets" hidden></div>
+  <div class="pied-nav" id="pied-presets" hidden>
+    <div class="ligne"><input class="champ-texte" id="nomPreset" placeholder="Nom du préréglage" aria-label="Nom du préréglage"><button class="btn plein carre" id="enregistrer" aria-label="Enregistrer l'état actuel comme préréglage"><svg class="ico"><use href="#i-plus"/></svg></button></div>
+    <div class="ligne"><button class="btn" id="exporterPresets" style="flex:1"><svg class="ico"><use href="#i-telecharger"/></svg>presets.json</button><button class="btn" id="importerPresets" style="flex:1"><svg class="ico"><use href="#i-importer"/></svg>Importer</button></div>
+    <input type="file" id="fichierPresets" accept=".json,application/json" hidden>
+  </div>
+</nav>
+
+<main>
+  <div class="toile"><div id="apercu" role="img" aria-label="Aperçu de la bannière animée"></div></div>
+  <div class="lecture">
+    <button class="btn carre" id="lecture" aria-label="Pause"><svg class="ico"><use href="#i-pause"/></svg></button>
+    <button class="btn carre discret" id="rejouer" aria-label="Rejouer depuis le début"><svg class="ico"><use href="#i-rejouer"/></svg></button>
+    <input type="range" id="temps" min="0" max="1000" value="0" aria-label="Position dans l'animation">
+    <span class="mono" id="v-temps"></span>
+  </div>
+  <p class="astuce">Clique sur un élément de la scène pour le régler. L'export est un SVG autonome sans script : il s'anime tout seul dans un README GitHub.</p>
+</main>
+
+<aside id="inspecteur"></aside>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 3l14 9-14 9V3z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></symbol>
+  <symbol id="i-rejouer" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+  <symbol id="i-soleil" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+  <symbol id="i-lune" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+  <symbol id="i-telecharger" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-importer" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+  <symbol id="i-copier" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+  <symbol id="i-lien" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+  <symbol id="i-chercher" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-poubelle" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+  <symbol id="i-scene" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/></symbol>
+  <symbol id="i-anim" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></symbol>
+  <symbol id="i-main" viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-4 0v1M14 10V4a2 2 0 0 0-4 0v2M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></symbol>
+  <symbol id="i-piece" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="6" ry="9"/><path d="M12 3c3.3 0 6 4 6 9s-2.7 9-6 9"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-face" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></symbol>
+</svg>
+
+<script>
+const MAINS = /*MAINS*/{};
+const BOUTS = /*BOUTS*/{};
+const LOGOS = /*LOGOS*/{};
+const SI = 'https://cdn.jsdelivr.net/npm/simple-icons@16.35.0';
+
+// ---------- outils
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const estObjet = (x) => x && typeof x === 'object' && !Array.isArray(x);
+const fusion = (a, b) => { const r = clone(a); for (const [k, v] of Object.entries(b || {})) r[k] = estObjet(v) && estObjet(r[k]) ? fusion(r[k], v) : clone(v); return r; };
+const lire = (o, p) => p.split('.').reduce((x, k) => x?.[k], o);
+const ecrire = (o, p, v) => { const k = p.split('.'), d = k.pop(); k.reduce((x, y) => x[y], o)[d] = v; };
+const melange = (a, b, t) => { const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)); const x = p(a), y = p(b); return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join(''); };
+const eclairer = (hex, lum) => (lum < 1 ? melange(hex, '#000000', 1 - lum) : melange(hex, '#ffffff', Math.min(1, lum - 1)));
+const lumineux = (hex) => { const n = parseInt(hex.slice(1), 16); return ((n >> 16) * 299 + ((n >> 8) & 255) * 587 + (n & 255) * 114) / 1000; };
+const visible = (hex) => (lumineux(hex) < 60 ? '#ffffff' : hex); // une marque noire (GitHub) ne brille pas en noir
+const logo = (slug) => ({ slug, titre: LOGOS[slug].titre, d: LOGOS[slug].d, hex: '#' + LOGOS[slug].hex.toLowerCase() });
+const BOITES = new Map();
+const boite = (d) => {
+  if (!BOITES.has(d)) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'), t = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    svg.style.cssText = 'position:absolute;visibility:hidden'; t.setAttribute('d', d); svg.append(t); document.body.append(svg);
+    const b = t.getBBox(); svg.remove();
+    BOITES.set(d, b.width && b.height ? { x: b.x, y: b.y, w: b.width, h: b.height } : { x: 0, y: 0, w: 24, h: 24 });
+  }
+  return BOITES.get(d);
+};
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const stockage = { lire(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }, ecrire(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+
+// ---------- état
+const MAIN = { style: 'relief', couleur: '#f6f7f9', lum: 1, contour: 1.3, neon: false, neonZone: 'contour', neonCouleur: '#e0805f', neonForce: 1 };
+const FACE = { fond: '#f6f7f9', logo: '#0a0a0a', gras: 0, taille: 100, neon: false, neonCouleur: '#ffffff', neonForce: 1 };
+const DEFAUT = {
+  scene: { format: 'banniere', fond: 'noir', fondCouleur: '#000000' },
+  animation: { type: 'retournement', duree: 3.5, ondeCouleur: '#ffffff', souffle: true, reduit: 'ignorer' },
+  mains: { lier: true, gauche: { ...MAIN }, droite: { ...MAIN } },
+  piece: { support: 'piece', taille: 100, epaisseur: 12, tranche: '#9aa0a8', trancheAuto: true, bord: 2, bordCouleur: '#c9ccd1', neon: false, neonCouleur: '#ffffff', neonForce: 1 },
+  aura: { actif: true, couleur: '#ffffff', taille: 4, force: 0.25, pulsation: true },
+  faces: { faceA: { ...FACE, ...logo('github') }, faceB: { ...FACE, ...logo('claude'), logo: '#d97757', neonCouleur: '#d97757' } },
+};
+const deuxMains = (m) => ({ gauche: m, droite: m });
+const PRESETS_INTEGRES = [
+  ['GitHub ↔ Claude', {}],
+  ['Claude, logo seul', { animation: { type: 'toupie', duree: 8 }, mains: deuxMains({ style: 'silhouette', lum: 0.85 }), aura: { couleur: '#d97757', force: 0.3 },
+    piece: { support: 'logo' }, faces: { faceA: { ...logo('claude'), logo: '#d97757', neon: true, neonCouleur: '#d97757' } } }],
+  ['Néon dans le noir', { animation: { type: 'levitation' }, mains: deuxMains({ style: 'relief', lum: 0.35, neon: true, neonZone: 'tout', neonCouleur: '#d97757', contour: 1.2 }),
+    aura: { couleur: '#d97757', taille: 5, force: 0.35 }, faces: { faceA: { ...logo('claude'), fond: '#d97757', logo: '#ffffff', neon: true, neonCouleur: '#d97757' } } }],
+  ['Pièce d\'or épaisse', { animation: { duree: 4.5 }, mains: deuxMains({ couleur: '#f3e3c0' }), aura: { couleur: '#e9c46a', force: 0.3 },
+    piece: { epaisseur: 26, tranche: '#c9973a', trancheAuto: false, bord: 3, bordCouleur: '#b8862f' },
+    faces: { faceA: { ...logo('github'), fond: '#e9c46a', logo: '#3d2a08' }, faceB: { ...logo('claude'), fond: '#e9c46a', logo: '#3d2a08' } } }],
+  ['Docker ↔ Kubernetes', { animation: { duree: 2.2 }, mains: deuxMains({ style: 'contour', contour: 1 }), aura: { couleur: '#2496ed' }, piece: { support: 'logo' },
+    faces: { faceA: { ...logo('docker'), logo: '#2496ed', neon: true, neonCouleur: '#2496ed' }, faceB: { ...logo('kubernetes'), logo: '#326ce5', neon: true, neonCouleur: '#326ce5' } } }],
+  ['Linux, sobre', { animation: { duree: 8 }, mains: deuxMains({ style: 'silhouette' }), aura: { actif: false }, piece: { epaisseur: 8 },
+    faces: { faceA: { ...logo('linux') }, faceB: { ...logo('linux') } } }],
+  ['Onde Discord', { animation: { type: 'onde', ondeCouleur: '#5865f2' }, aura: { actif: false }, piece: { bord: 0 },
+    faces: { faceA: { ...logo('discord'), fond: '#5865f2', logo: '#ffffff' } } }],
+].map(([nom, o]) => ({ nom, etat: fusion(DEFAUT, o) }));
+
+let etat = clone(DEFAUT);
+let selection = 'faceA';
+
+// ---------- rendu de la scène (SVG autonome, animations CSS uniquement)
+function scene(e) {
+  const carre = e.scene.format === 'carre';
+  const [W, H, g, R0] = carre ? [800, 800, 210, 66] : [1200, 500, 230, 62];
+  const s = (carre ? 596 : 846) / MAINS['main-adam'].l; // largeur visée de la main d'Adam, quelle que soit la résolution du tracé
+  const R = R0 * e.piece.taille / 100, cx = W / 2, cy = H / 2, T = e.animation.duree, A = e.animation.type;
+  const n = (v) => +(+v).toFixed(2), px = (v) => n(v / s); // épaisseurs en pixels de scène
+  const css = [], defs = [];
+
+  const main = (cle) => {
+    const m = e.mains[cle]; if (m.style === 'masquee') return '';
+    const nom = cle === 'gauche' ? 'main-adam' : 'main-dieu', c = MAINS[nom].couches, b = BOUTS[nom];
+    const x = cle === 'gauche' ? cx - g / 2 - b.x * s : cx + g / 2 - b.x * s;
+    const base = eclairer(m.couleur, m.lum);
+    const trait = (d, coul, ep) => `<path d="${d}" fill="none" stroke="${coul}" stroke-width="${px(ep)}" stroke-linejoin="round"/>`;
+    const tons = c.clair ? [[c.fond, 0.8], [c.moyen, 0.55], [c.clair, 0.28], [c.lumiere, 0]] : [[c.fond, 0.78], [c.moyen, 0.32], [c.lumiere, 0]];
+    const corps = m.style === 'relief' ? tons.map(([d, t]) => `<path d="${d}" fill="${melange(base, '#000000', t)}"/>`).join('')
+      : m.style === 'silhouette' ? `<path d="${c.fond}" fill="${base}"/>`
+      : `<path d="${c.lumiere}" fill="${base}" opacity=".16"/>` + trait(c.fond, base, m.contour);
+    let dessous = '', dessus = '';
+    if (m.neon) { // halo flou dessous, trait coloré + âme blanche dessus
+      defs.push(`<filter id="flou-${cle}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="${px(7 * m.neonForce)}"/><feMerge><feMergeNode/><feMergeNode/></feMerge></filter>`);
+      const zones = { contour: [c.fond], reflets: [c.lumiere], tout: [c.fond, c.lumiere] }[m.neonZone];
+      for (const d of zones) {
+        const ep = d === c.fond ? m.contour : m.contour * 0.7;
+        dessous += `<path d="${d}" fill="none" stroke="${m.neonCouleur}" stroke-width="${px((ep * 4 + 6) * Math.sqrt(m.neonForce))}" filter="url(#flou-${cle})"/>`;
+        dessus += trait(d, m.neonCouleur, ep) + trait(d, '#ffffff', Math.max(0.5, ep / 3));
+      }
+    }
+    return `<g class="${cle === 'gauche' ? 'ma' : 'md'}" data-calque="${cle}"><g transform="translate(${n(x)} ${n(cy - b.y * s)}) scale(${n(s * 1000) / 1000})" fill-rule="evenodd">${dessous}${corps}${dessus}</g></g>`;
+  };
+
+  const cadre = (f) => {
+    if (e.piece.support !== 'logo') { const k = R * 1.12 * f.taille / 100 / 24, L = k * 24; return { k, pose: `transform="translate(${n(cx - L / 2)} ${n(cy - L / 2)}) scale(${k.toFixed(4)})"` }; }
+    const b = boite(f.d), k = R * 1.75 * f.taille / 100 / Math.max(b.w, b.h);
+    return { k, pose: `transform="translate(${n(cx - (b.x + b.w / 2) * k)} ${n(cy - (b.y + b.h / 2) * k)}) scale(${k.toFixed(4)})"` };
+  };
+  const face = (cle, silhouette = false) => { // silhouette : la lueur est dessinée une fois pour toute la pièce (faces + tranche)
+    const f = e.faces[cle], p = e.piece, { k, pose } = cadre(f);
+    const dessin = (coul, plus = '') => `<path d="${f.d}" fill="${coul}" ${pose}${f.gras ? ` stroke="${coul}" stroke-width="${(f.gras * 2 / k).toFixed(3)}" stroke-linejoin="round"` : ''}${plus}/>`;
+    const neon = f.neon || p.neon, nc = f.neon ? f.neonCouleur : p.neonCouleur, nf = f.neon ? f.neonForce : p.neonForce;
+    let h = '';
+    if (p.support === 'logo') {
+      if (neon) { defs.push(`<filter id="flou-${cle}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${n(5 * nf / k)}"/><feMerge><feMergeNode/><feMergeNode/></feMerge></filter>`); h += dessin(nc, ` filter="url(#flou-${cle})"`); }
+      return h + dessin(f.logo);
+    }
+    if (neon && !silhouette) {
+      defs.push(`<filter id="flou-${cle}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${n(6 * nf)}"/><feMerge><feMergeNode/><feMergeNode/></feMerge></filter>`);
+      h += `<circle cx="${cx}" cy="${cy}" r="${n(R)}" fill="none" stroke="${nc}" stroke-width="${n(6 + 4 * nf)}" filter="url(#flou-${cle})"/>`;
+    }
+    const bord = neon ? Math.max(p.bord, 2) : p.bord;
+    h += `<circle cx="${cx}" cy="${cy}" r="${n(R)}" fill="${f.fond}"${bord ? ` stroke="${neon ? nc : p.bordCouleur}" stroke-width="${bord}"` : ''}/>`;
+    return h + dessin(f.logo);
+  };
+
+  // une pièce qui tourne se projette en cos(angle) ; ses faces s'écartent de ±épaisseur/2·sin(angle) et la tranche mesure épaisseur·|sin|
+  // jamais d'échelle exactement nulle : une matrice dégénérée fait dessiner des traits parasites à certains navigateurs (pièce de profil)
+  const echelle = (v) => (Math.abs(v) < 1e-3 ? (v < 0 ? -1e-3 : 1e-3) : v).toFixed(3);
+  const N = 24, kf = (nom, fn) => `@keyframes ${nom}{${Array.from({ length: N + 1 }, (_, i) => `${n(i / N * 100)}%{transform:${fn(i / N * 2 * Math.PI)}}`).join('')}}`;
+  const centre = `transform-box:view-box;transform-origin:${cx}px ${cy}px`;
+  let piece = '', ondes = '';
+  if (A === 'retournement') {
+    const d = e.piece.epaisseur, cos = (a) => echelle(Math.cos(a)), sin = (a, k = 1) => echelle(k * Math.sin(a));
+    css.push(kf('pa', (a) => `translateX(${n(d / 2 * Math.sin(a))}px) scaleX(${cos(a)})`), kf('pb', (a) => `translateX(${n(-d / 2 * Math.sin(a))}px) scaleX(${cos(a)})`),
+      `.pa,.pb,.tr,.ha,.hb{${centre}}.pa{animation:pa ${T}s linear infinite}.pb{animation:pb ${T}s linear infinite}.va{animation:va ${T}s step-end infinite}.vb{animation:vb ${T}s step-end infinite}@keyframes va{0%{opacity:1}24.4%{opacity:0}75.6%{opacity:1}}@keyframes vb{0%{opacity:0}25.6%{opacity:1}74.4%{opacity:0}}.vp{animation:vp ${T}s step-end infinite}@keyframes vp{0%{opacity:1}24.4%{opacity:0}25.6%{opacity:1}74.4%{opacity:0}75.6%{opacity:1}}`);
+    const sil = e.piece.support === 'piece';
+    const lueur = (cle) => { const f = e.faces[cle], p = e.piece; return f.neon ? [f.neonCouleur, f.neonForce] : p.neon ? [p.neonCouleur, p.neonForce] : null; };
+    const la = sil && lueur('faceA'), lb = sil && lueur('faceB');
+    // chaque moitié de la tranche appartient à une face : la moitié A suit sin(angle), la B suit -sin(angle) ; les couleurs se rejoignent au milieu
+    if (d) css.push(kf('ha', (a) => `scaleX(${sin(a)})`), kf('hb', (a) => `scaleX(${sin(a, -1)})`), `.ha{animation:ha ${T}s linear infinite}.hb{animation:hb ${T}s linear infinite}`);
+    const moitie = (cls, l, y, h, plus = '') => (l ? `<g class="${cls}"><rect x="${cx}" y="${n(y)}" width="${n(d / 2)}" height="${n(h)}" fill="${l[0]}"${plus}/></g>` : '');
+    if (la || lb) { // une seule lueur floutée d'un bloc sur la silhouette animée : continue sur la tranche, sans saut au changement de face
+      const force = Math.max(la ? la[1] : 0, lb ? lb[1] : 0), marge = n(3 + 2 * force);
+      // zone du flou fixe en coordonnées de scène : relative à la boîte englobante, elle rétrécit avec la pièce de profil et coupe le néon net
+      const zone = n(R + marge + d + 18 * force + 10);
+      defs.push(`<filter id="flou-piece" filterUnits="userSpaceOnUse" x="${n(cx - zone)}" y="${n(cy - zone)}" width="${n(2 * zone)}" height="${n(2 * zone)}"><feGaussianBlur stdDeviation="${n(6 * force)}"/><feMerge><feMergeNode/><feMergeNode/></feMerge></filter>`);
+      const disque = (cls, l) => (l ? `<g class="${cls}"><circle cx="${cx}" cy="${cy}" r="${n(R + marge)}" fill="${l[0]}"/></g>` : '');
+      piece += `<g filter="url(#flou-piece)" data-calque="piece">${disque('pa', la)}${disque('pb', lb)}${d ? moitie('ha', la, cy - R - marge, 2 * (R + marge)) + moitie('hb', lb, cy - R - marge, 2 * (R + marge)) : ''}</g>`;
+    }
+    if (d && sil) {
+      // silhouette pleine d'une pièce vue de biais = les deux disques + le rectangle qui les relie ; teintes unies : un dégradé ne raccorde pas avec le disque arrière et dessine un anneau creux
+      const teinte = (cle) => (e.piece.trancheAuto ? e.faces[cle].fond : e.piece.tranche), bordT = (c) => melange(c, '#000000', 0.12);
+      // rayon extérieur = disque + moitié de son liseré, sinon le contour de la face dépasse de l'épaisseur près du profil
+      const Re = (cle) => R + ((e.faces[cle].neon || e.piece.neon) ? Math.max(e.piece.bord, 2) : e.piece.bord) / 2;
+      const disque = (cls, cle) => `<g class="${cls}" data-calque="piece"><g class="vp"><circle cx="${cx}" cy="${cy}" r="${n(Re(cle))}" fill="${bordT(teinte(cle))}"/></g></g>`;
+      const demi = (cls, cle) => `<g class="${cls}" data-calque="piece"><rect x="${cx}" y="${n(cy - Re(cle))}" width="${n(d / 2)}" height="${n(2 * Re(cle))}" fill="${bordT(teinte(cle))}"/></g>`;
+      piece += disque('pa', 'faceA') + disque('pb', 'faceB') + demi('ha', 'faceA') + demi('hb', 'faceB');
+      // arêtes de la tranche au néon, nettes, chaque moitié dans la couleur de sa face
+      const arete = (l) => (l ? ` opacity=".9"` : '');
+      piece += moitie('ha', la, cy - R - 1, 3, arete(la)) + moitie('ha', la, cy + R - 2, 3, arete(la)) + moitie('hb', lb, cy - R - 1, 3, arete(lb)) + moitie('hb', lb, cy + R - 2, 3, arete(lb));
+    }
+    if (d && !sil) { // logo seul extrudé : des tranches du logo empilées dans l'épaisseur, côté A la forme A, côté B la forme B
+      const miroir = `translate(${cx} 0) scale(-1 1) translate(${-cx} 0)`;
+      const forme = (cle) => { const f = e.faces[cle], { k, pose } = cadre(f); return `<path d="${f.d}" fill="currentColor" ${pose}${f.gras ? ` stroke="currentColor" stroke-width="${(f.gras * 2 / k).toFixed(3)}" stroke-linejoin="round"` : ''}/>`; };
+      defs.push(`<g id="xa">${forme('faceA')}</g><g id="xb"><g transform="${miroir}">${forme('faceB')}</g></g>`);
+      // profondeur z : translateX(z·sin) scaleX(cos) obtenu avec deux animations communes, l'amplitude z venant d'une échelle fixe autour
+      css.push(kf('dx', (a) => `translateX(${Math.sin(a).toFixed(4)}px)`), kf('pc', (a) => `scaleX(${cos(a)})`),
+        `.dx{animation:dx ${T}s linear infinite}.pc{animation:pc ${T}s linear infinite}.sa{animation:sa ${T}s step-end infinite}.sb{animation:sb ${T}s step-end infinite}@keyframes sa{0%{opacity:1}25%{opacity:0}75%{opacity:1}}@keyframes sb{0%{opacity:0}25%{opacity:1}75%{opacity:0}}`);
+      const m = Math.min(48, Math.max(2, Math.ceil(d))), pas = d / m;
+      const couche = (i) => {
+        const z = -d / 2 + (i + 0.5) * pas, t = Math.abs(z) / (d / 2);
+        return `<g transform="translate(${cx} 0) scale(${z.toFixed(4)} 1)"><g class="dx"><g transform="scale(${(1 / z).toFixed(4)} 1)"><g class="pc"><use href="#${z > 0 ? 'xa' : 'xb'}" transform="translate(${-cx} 0)" color="${melange(e.piece.trancheAuto ? e.faces[z > 0 ? 'faceA' : 'faceB'].logo : e.piece.tranche, '#000000', 0.4 - 0.3 * t)}"/></g></g></g></g>`;
+      };
+      const ordre = Array.from({ length: m }, (_, i) => i); // de l'arrière vers l'avant selon la face tournée vers nous
+      // pile de profil les tranches n'ont plus de largeur : une bande par moitié, de la hauteur de sa forme, prend le relais un instant
+      css.push(`.vq{animation:vq ${T}s step-end infinite}@keyframes vq{0%{opacity:0}24.4%{opacity:1}25.6%{opacity:0}74.4%{opacity:1}75.6%{opacity:0}}`);
+      const bande = (cls, cle) => { const f = e.faces[cle], h = boite(f.d).h * cadre(f).k; return `<g class="${cls}"><rect class="vq" x="${cx}" y="${n(cy - h / 2)}" width="${n(d / 2)}" height="${n(h)}" fill="${melange(e.piece.trancheAuto ? f.logo : e.piece.tranche, '#000000', 0.15)}"/></g>`; };
+      piece += `<g data-calque="piece"><g class="sa">${ordre.map(couche).join('')}</g><g class="sb">${ordre.reverse().map(couche).join('')}</g>${bande('ha', 'faceA')}${bande('hb', 'faceB')}</g>`;
+    }
+    piece += `<g class="pa"><g class="va" data-calque="faceA">${face('faceA', sil)}</g></g><g class="pb"><g class="vb" data-calque="faceB"><g transform="translate(${cx} 0) scale(-1 1) translate(${-cx} 0)">${face('faceB', sil)}</g></g></g>`;
+  } else {
+    piece = `<g class="piece"><g data-calque="faceA">${face('faceA')}</g></g>`;
+    css.push(`.piece{${centre}}`);
+    if (A === 'toupie') css.push(`.piece{animation:toupie ${T}s linear infinite}@keyframes toupie{to{transform:rotate(360deg)}}`);
+    if (A === 'levitation') css.push(`.piece{animation:lev ${T}s ease-in-out infinite}@keyframes lev{0%,100%{transform:translateY(-7px)}50%{transform:translateY(7px)}}`);
+    if (A === 'onde') {
+      css.push(`.onde{${centre};animation:onde ${T}s cubic-bezier(.2,.6,.3,1) infinite;opacity:0}.o2{animation-delay:${n(T / 3)}s}.o3{animation-delay:${n(2 * T / 3)}s}@keyframes onde{0%{transform:scale(1);opacity:.6}100%{transform:scale(2.6);opacity:0}}`);
+      ondes = [1, 2, 3].map((i) => `<circle class="onde o${i}" data-calque="animation" cx="${cx}" cy="${cy}" r="${n(R)}" fill="none" stroke="${e.animation.ondeCouleur}" stroke-width="2"/>`).join('');
+    }
+  }
+  if (e.animation.souffle) css.push(`.ma{animation:ma ${n(T * 1.5)}s ease-in-out infinite}.md{animation:md ${n(T * 1.5)}s ease-in-out infinite}@keyframes ma{0%,100%{transform:translateX(0)}50%{transform:translateX(7px)}}@keyframes md{0%,100%{transform:translateX(0)}50%{transform:translateX(-7px)}}`);
+  let aura = '';
+  if (e.aura.actif) {
+    defs.push(`<radialGradient id="aura"><stop offset="0" stop-color="${e.aura.couleur}" stop-opacity="${e.aura.force}"/><stop offset=".35" stop-color="${e.aura.couleur}" stop-opacity="${n(e.aura.force * 0.45)}"/><stop offset="1" stop-color="${e.aura.couleur}" stop-opacity="0"/></radialGradient>`);
+    if (e.aura.pulsation) css.push(`.aura{transform-box:fill-box;transform-origin:center;animation:aura ${T}s ease-in-out infinite}@keyframes aura{0%,100%{opacity:.7;transform:scale(.96)}50%{opacity:1;transform:scale(1.04)}}`);
+    aura = `<circle class="aura" data-calque="piece" cx="${cx}" cy="${cy}" r="${n(R * e.aura.taille)}" fill="url(#aura)"/>`;
+  }
+  if (e.animation.reduit === 'respecter') css.push('@media (prefers-reduced-motion:reduce){*{animation:none!important}}');
+  const fond = e.scene.fond === 'transparent' ? '' : `<rect data-calque="scene" width="${W}" height="${H}" fill="${e.scene.fond === 'couleur' ? e.scene.fondCouleur : '#000'}"/>`;
+  const titre = A === 'retournement' && e.faces.faceB.slug !== e.faces.faceA.slug ? `${e.faces.faceA.titre} et ${e.faces.faceB.titre}` : e.faces.faceA.titre;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(titre)} entre les mains de la Création d'Adam">
+<style>${css.join('')}</style>
+<defs>${defs.join('')}</defs>
+${fond}${aura}${ondes}
+${main('gauche')}
+${main('droite')}
+${piece}
+</svg>`;
+}
+
+// ---------- éléments et réglages
+const OPT = {
+  style: [['relief', 'Relief'], ['silhouette', 'Silhouette'], ['contour', 'Contour'], ['masquee', 'Masquée']],
+  type: [['retournement', 'Retournement'], ['toupie', 'Toupie'], ['levitation', 'Lévitation'], ['onde', 'Onde'], ['aucune', 'Fixe']],
+  vitesse: [[8, 'Très lente'], [5, 'Lente'], [3.5, 'Normale'], [2.2, 'Rapide'], [1.4, 'Très rapide']],
+  zone: [['contour', 'Contour'], ['reflets', 'Reflets'], ['tout', 'Les deux']],
+};
+const libelle = (liste, v) => liste.find((o) => o[0] === v)?.[1] ?? v;
+const resumeMain = (m) => m.style === 'masquee' ? 'Masquée' : libelle(OPT.style, m.style) + (m.lum !== 1 ? ` · ${Math.round(m.lum * 100)} %` : '') + (m.neon ? ' · néon' : '');
+const CALQUES = [
+  { id: 'scene', nom: 'Scène', icone: 'scene', resume: (e) => `${e.scene.format === 'carre' ? '800×800' : '1200×500'} · fond ${e.scene.fond}` },
+  { id: 'animation', nom: 'Animation', icone: 'anim', resume: (e) => `${libelle(OPT.type, e.animation.type)} · ${e.animation.duree} s` },
+  { id: 'gauche', nom: 'Main gauche', icone: 'main', resume: (e) => resumeMain(e.mains.gauche) },
+  { id: 'droite', nom: 'Main droite', icone: 'main', miroir: true, resume: (e) => resumeMain(e.mains.droite) },
+  { id: 'piece', nom: 'Pièce et aura', icone: 'piece', resume: (e) => (e.piece.support === 'logo' ? 'Logo seul' + (e.piece.epaisseur ? ` · extrudé ${e.piece.epaisseur} px` : '') : `Épaisseur ${e.piece.epaisseur} px`) + (e.aura.actif ? ' · aura' : '') + (e.piece.neon ? ' · néon' : '') },
+  { id: 'faceA', nom: 'Face avant', icone: 'face', resume: (e) => e.faces.faceA.titre + (e.faces.faceA.neon ? ' · néon' : '') },
+  { id: 'faceB', nom: 'Face arrière', icone: 'face', si: (e) => e.animation.type === 'retournement', resume: (e) => e.faces.faceB.titre + (e.faces.faceB.neon ? ' · néon' : '') },
+];
+const PASTILLES = ['#ffffff', '#0a0a0a', '#d97757', '#58a6ff', '#3fb950', '#bc8cff', '#e9c46a'];
+
+const groupe = (titre, ...champs) => ({ groupe: titre, champs });
+const seg = (chemin, lib, options, plus = {}) => ({ type: 'seg', chemin, lib, options, ...plus });
+const liste = (chemin, lib, options, plus = {}) => ({ type: 'liste', chemin, lib, options, ...plus });
+const couleur = (chemin, lib, plus = {}) => ({ type: 'couleur', chemin, lib, ...plus });
+const curseur = (chemin, lib, min, max, pas, unite, plus = {}) => ({ type: 'curseur', chemin, lib, min, max, pas, unite, ...plus });
+const inter = (chemin, lib, plus = {}) => ({ type: 'inter', chemin, lib, ...plus });
+const bascule = (chemin) => ({ bascule: chemin }); // interrupteur dans l'en-tête de section : coupé, la section se replie
+const note = (texte) => ({ note: texte });
+const condition = (si) => ({ condition: si });
+
+function champs(id) {
+  if (id === 'scene') return [
+    groupe('Format', seg('scene.format', 'Taille', [['banniere', '1200×500'], ['carre', '800×800']])),
+    groupe('Fond', seg('scene.fond', 'Type', [['noir', 'Noir'], ['couleur', 'Couleur'], ['transparent', 'Aucun']]),
+      couleur('scene.fondCouleur', 'Couleur', { si: (e) => e.scene.fond === 'couleur' })),
+  ];
+  if (id === 'animation') return [
+    groupe('Mouvement', liste('animation.type', 'Type', OPT.type), liste('animation.duree', 'Vitesse', OPT.vitesse, { num: true }),
+      curseur('animation.duree', 'Durée', 1, 12, 0.1, ' s'), couleur('animation.ondeCouleur', 'Ondes', { si: (e) => e.animation.type === 'onde' })),
+    groupe('Options', inter('animation.souffle', 'Les mains respirent'),
+      liste('animation.reduit', 'Animations coupées', [['ignorer', 'Jouer quand même'], ['respecter', 'Rester immobile']])),
+  ];
+  if (id === 'gauche' || id === 'droite') {
+    const p = `mains.${id}`, m = (e) => e.mains[id], montree = (e) => m(e).style !== 'masquee';
+    return [
+      groupe('Apparence', liste(`${p}.style`, 'Style', OPT.style), couleur(`${p}.couleur`, 'Couleur', { si: montree }),
+        curseur(`${p}.lum`, 'Luminosité', 0.15, 1.6, 0.05, '', { si: montree, pourcent: true }),
+        curseur(`${p}.contour`, 'Trait', 0.5, 8, 0.1, ' px', { si: (e) => m(e).style === 'contour' || m(e).neon })),
+      groupe('Néon', bascule(`${p}.neon`), seg(`${p}.neonZone`, 'Zone', OPT.zone), couleur(`${p}.neonCouleur`, 'Couleur'),
+        curseur(`${p}.neonForce`, 'Intensité', 0.3, 3, 0.1, '×'), condition(montree)),
+      groupe('Synchronisation', inter('mains.lier', 'Mêmes réglages des deux côtés')),
+    ];
+  }
+  if (id === 'piece') return [
+    groupe('Forme', seg('piece.support', 'Support', [['piece', 'Pièce'], ['logo', 'Logo seul']]), curseur('piece.taille', 'Taille', 60, 160, 5, ' %')),
+    groupe('Épaisseur', curseur('piece.epaisseur', 'Épaisseur', 0, 40, 1, ' px'), inter('piece.trancheAuto', 'Couleur des faces'), couleur('piece.tranche', 'Tranche', { si: (e) => !e.piece.trancheAuto }),
+      note((e) => (e.animation.type !== 'retournement' ? 'Visible seulement avec le retournement.' : e.piece.support === 'logo' ? 'Logo extrudé : chaque moitié de l’épaisseur prend la forme de sa face.' : ''))),
+    groupe('Liseré', curseur('piece.bord', 'Épaisseur', 0, 12, 0.5, ' px'), couleur('piece.bordCouleur', 'Couleur', { si: (e) => e.piece.bord > 0 }),
+      condition((e) => e.piece.support === 'piece')),
+    groupe('Aura', bascule('aura.actif'), couleur('aura.couleur', 'Couleur'), curseur('aura.taille', 'Taille', 1.5, 9, 0.1, '×'),
+      curseur('aura.force', 'Luminosité', 0.05, 1, 0.05, '', { pourcent: true }), inter('aura.pulsation', 'Pulsation')),
+    groupe('Néon de la pièce', bascule('piece.neon'), couleur('piece.neonCouleur', 'Couleur'), curseur('piece.neonForce', 'Intensité', 0.3, 3, 0.1, '×'),
+      note(() => 'Le néon propre à une face passe devant.')),
+  ];
+  const p = `faces.${id}`;
+  return [
+    groupe('Logo', { type: 'icone', face: id }, couleur(`${p}.logo`, 'Couleur', { marque: id }),
+      curseur(`${p}.gras`, 'Trait', 0, 3, 0.1, ' px'), curseur(`${p}.taille`, 'Taille', 50, 150, 5, ' %')),
+    groupe('Face', couleur(`${p}.fond`, 'Couleur', { marque: id }), condition((e) => e.piece.support === 'piece')),
+    groupe('Néon', bascule(`${p}.neon`), couleur(`${p}.neonCouleur`, 'Couleur', { marque: id }), curseur(`${p}.neonForce`, 'Intensité', 0.3, 3, 0.1, '×')),
+  ];
+}
+
+// ---------- inspecteur
+const $ = (s, r = document) => r.querySelector(s);
+const ico = (nom, cls = '') => `<svg class="ico ${cls}"><use href="#i-${nom}"/></svg>`;
+const valeurAffichee = (c, v) => (c.pourcent ? `${Math.round(v * 100)} %` : `${v}${c.unite}`);
+const replies = new Set(); // sections repliées, par élément
+let paletteOuverte = null, idChamp = 0;
+const rangee = (lib, ctrl, id) => `<div class="rangee"><label class="nom"${id ? ` for="${id}"` : ''}>${lib}</label><div class="ctrl">${ctrl}</div></div>`;
+function champHtml(c) {
+  if (c.condition || c.bascule) return '';
+  if (c.note) { const t = c.note(etat); return t ? `<p class="note">${esc(t)}</p>` : ''; }
+  if (c.si && !c.si(etat)) return '';
+  const v = c.chemin ? lire(etat, c.chemin) : null, id = `c${idChamp++}`;
+  if (c.type === 'seg') return rangee(c.lib, `<div class="seg" role="group" aria-label="${c.lib}">${c.options.map(([o, l]) =>
+    `<button data-chemin="${c.chemin}" data-v="${o}"${c.num ? ' data-num' : ''} aria-pressed="${v === o}">${l}</button>`).join('')}</div>`);
+  if (c.type === 'liste') {
+    const perso = c.num && !c.options.some(([o]) => o === v) ? `<option selected value="${v}">Personnalisée (${v} s)</option>` : '';
+    return rangee(c.lib, `<select id="${id}" data-chemin="${c.chemin}"${c.num ? ' data-num' : ''}>${perso}${c.options.map(([o, l]) => `<option value="${o}"${o === v ? ' selected' : ''}>${l}</option>`).join('')}</select>`, id);
+  }
+  if (c.type === 'curseur') return rangee(c.lib, `<div class="curseur"><input type="range" id="${id}" data-chemin="${c.chemin}" data-unite="${c.unite}"${c.pourcent ? ' data-pourcent' : ''} min="${c.min}" max="${c.max}" step="${c.pas}" value="${v}"><output>${valeurAffichee(c, v)}</output></div>`, id);
+  if (c.type === 'inter') return `<label class="rangee inter"><span class="nom">${c.lib}</span><input type="checkbox" role="switch" data-chemin="${c.chemin}"${v ? ' checked' : ''}></label>`;
+  if (c.type === 'couleur') {
+    const ouverte = paletteOuverte === c.chemin, marque = c.marque ? etat.faces[c.marque].hex : null;
+    const pastille = (hex, plus = '') => `<button class="pastille${plus ? ' marque' : ''}" style="--c:${hex}" data-chemin="${c.chemin}" data-v="${hex}" aria-pressed="${hex === v}" aria-label="${plus || 'Couleur ' + hex}" title="${plus || hex}"></button>`;
+    return rangee(c.lib, `<button class="puce" data-palette="${c.chemin}" aria-expanded="${ouverte}"><i style="background:${v}"></i><span>${v}</span>${ico('chevron')}</button>`) +
+      (ouverte ? `<div class="palette">
+        <div class="perso"><input type="color" data-chemin="${c.chemin}" value="${v}" aria-label="Couleur personnalisée"><input class="hex" data-hex="${c.chemin}" value="${v}" maxlength="7" spellcheck="false" aria-label="Code hexadécimal"></div>
+        <div class="pastilles">${marque ? pastille(marque, 'Couleur de la marque') : ''}${PASTILLES.map((h) => pastille(h)).join('')}</div></div>` : '');
+  }
+  if (c.type === 'icone') {
+    const f = etat.faces[c.face];
+    return `<div class="logo-actuel"><svg viewBox="0 0 24 24" fill="${lumineux(f.hex) < 60 ? 'currentColor' : f.hex}"><path d="${f.d}"/></svg><div><b>${esc(f.titre)}</b><span class="mono">${esc(f.slug)}</span></div></div>
+      <div class="recherche">${ico('chercher')}<input type="search" data-recherche="${c.face}" placeholder="Chercher parmi ${catalogue ? catalogue.length.toLocaleString('fr-FR') : '3 400+'} logos" aria-label="Chercher un logo"></div>
+      <div class="resultats" data-resultats="${c.face}"></div><p class="note" data-etat-recherche="${c.face}"></p>`;
+  }
+  return '';
+}
+function rendreInspecteur() {
+  const c = CALQUES.find((x) => x.id === selection);
+  idChamp = 0;
+  const defile = $('#inspecteur').scrollTop;
+  $('#inspecteur').innerHTML = `<div class="entete-insp">${ico(c.icone, c.miroir ? 'miroir' : '')}<h2>${c.nom}</h2></div>` +
+    champs(selection).filter((g) => !g.champs.some((x) => x.condition && !x.condition(etat))).map((g) => {
+      const cle = `${selection}:${g.groupe}`, b = g.champs.find((x) => x.bascule), actif = b ? lire(etat, b.bascule) : true;
+      const ouvert = !replies.has(cle) && actif, corps = ouvert ? g.champs.map(champHtml).join('') : '';
+      return `<section class="groupe"><div class="tete"><button class="plier" data-plier="${cle}" aria-expanded="${ouvert}"${actif ? '' : ' disabled'}>${ico('chevron')}${g.groupe}</button>` +
+        `${b ? `<input type="checkbox" role="switch" data-chemin="${b.bascule}" aria-label="Activer : ${g.groupe}"${actif ? ' checked' : ''}>` : ''}</div>${corps ? `<div class="corps">${corps}</div>` : ''}</section>`;
+    }).join('');
+  $('#inspecteur').scrollTop = defile;
+  const r = $('[data-recherche]'); if (r) afficherResultats(r.dataset.recherche, '');
+}
+function rendreCalques() {
+  $('#p-calques').innerHTML = CALQUES.filter((c) => !c.si || c.si(etat)).map((c) =>
+    `<button class="calque" data-calque="${c.id}" aria-current="${c.id === selection}">${ico(c.icone, c.miroir ? 'miroir' : '')}<span><b>${c.nom}</b><small>${esc(c.resume(etat))}</small></span></button>`).join('');
+}
+function choisir(id) { selection = id; paletteOuverte = null; toutRendre(false); }
+
+function modifier(chemin, v) {
+  ecrire(etat, chemin, v);
+  const m = chemin.match(/^mains\.(gauche|droite)\.(.+)$/);
+  if (m && etat.mains.lier) ecrire(etat, `mains.${m[1] === 'gauche' ? 'droite' : 'gauche'}.${m[2]}`, v);
+  if (chemin === 'mains.lier' && v) { const src = selection === 'droite' ? 'droite' : 'gauche'; etat.mains[src === 'droite' ? 'gauche' : 'droite'] = clone(etat.mains[src]); }
+}
+const insp = $('#inspecteur');
+insp.addEventListener('click', (e) => {
+  const pl = e.target.closest('[data-plier]');
+  if (pl) { replies.has(pl.dataset.plier) ? replies.delete(pl.dataset.plier) : replies.add(pl.dataset.plier); return rendreInspecteur(); }
+  const pa = e.target.closest('[data-palette]');
+  if (pa) { paletteOuverte = paletteOuverte === pa.dataset.palette ? null : pa.dataset.palette; return rendreInspecteur(); }
+  const b = e.target.closest('button[data-chemin]'); if (!b) return;
+  modifier(b.dataset.chemin, 'num' in b.dataset ? +b.dataset.v : b.dataset.v);
+  toutRendre();
+});
+insp.addEventListener('input', (e) => {
+  const t = e.target;
+  if (t.dataset.recherche) return chercherPlusTard(t.dataset.recherche, t.value);
+  if (!t.dataset.chemin || t.type === 'checkbox' || t.tagName === 'SELECT') return;
+  const v = t.type === 'range' ? +t.value : t.value;
+  modifier(t.dataset.chemin, v);
+  // pas de re-rendu de l'inspecteur pendant un glisser : le contrôle sous la souris doit rester en place
+  if (t.type === 'range') t.nextElementSibling.textContent = 'pourcent' in t.dataset ? `${Math.round(v * 100)} %` : v + t.dataset.unite;
+  if (t.type === 'color') { const puce = insp.querySelector(`[data-palette="${t.dataset.chemin}"]`); puce.querySelector('i').style.background = v; puce.querySelector('span').textContent = v; t.nextElementSibling.value = v; }
+  rendreScene(); rendreCalques();
+});
+insp.addEventListener('change', (e) => {
+  const t = e.target;
+  if (t.type === 'checkbox') { modifier(t.dataset.chemin, t.checked); toutRendre(); }
+  else if (t.tagName === 'SELECT') { modifier(t.dataset.chemin, 'num' in t.dataset ? +t.value : t.value); toutRendre(); }
+  else if (t.dataset.hex) {
+    const v = t.value.trim().toLowerCase().replace(/^#?/, '#');
+    if (/^#[0-9a-f]{6}$/.test(v)) { modifier(t.dataset.hex, v); toutRendre(); } else { t.value = lire(etat, t.dataset.hex); retour('Code couleur invalide : il faut 6 chiffres hexadécimaux'); }
+  } else if (t.type === 'range' || t.type === 'color') rendreInspecteur(); // visibilités qui dépendent de la valeur (ex. liseré à 0)
+});
+
+// ---------- recherche de logos (catalogue Simple Icons, chargé à la demande)
+let catalogue = null, chargement = null, minuterie = 0;
+function chargerCatalogue() {
+  chargement ??= fetch(`${SI}/data/simple-icons.json`).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then((j) => (catalogue = j.map((i) => ({ slug: i.slug, titre: i.title, hex: '#' + i.hex.toLowerCase(), cle: [i.title, i.slug, ...(i.aliases?.aka || [])].join(' ').toLowerCase() }))))
+    .catch(() => { chargement = null; return null; });
+  return chargement;
+}
+function chercherPlusTard(face, q) { clearTimeout(minuterie); minuterie = setTimeout(() => afficherResultats(face, q), 120); }
+async function afficherResultats(face, q) {
+  const zone = $(`[data-resultats="${face}"]`), info = $(`[data-etat-recherche="${face}"]`); if (!zone) return;
+  q = q.trim().toLowerCase();
+  if (!q) { // sans recherche : les logos intégrés, utilisables hors ligne
+    zone.innerHTML = Object.keys(LOGOS).map((s) => `<button data-logo="${s}" data-face="${face}" title="${esc(LOGOS[s].titre)}" aria-label="${esc(LOGOS[s].titre)}" aria-pressed="${etat.faces[face].slug === s}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="${LOGOS[s].d}"/></svg></button>`).join('');
+    info.textContent = 'Favoris intégrés. Tape un nom pour chercher dans tout le catalogue Simple Icons.';
+    return;
+  }
+  info.textContent = 'Chargement du catalogue…';
+  const cat = await chargerCatalogue();
+  if (!cat) { info.textContent = 'Catalogue injoignable (hors ligne ?) : seuls les favoris intégrés sont disponibles.'; return; }
+  const trouves = cat.filter((i) => i.cle.includes(q)).sort((a, b) => (b.titre.toLowerCase().startsWith(q) - a.titre.toLowerCase().startsWith(q)) || a.titre.length - b.titre.length).slice(0, 60);
+  zone.innerHTML = trouves.map((i) => `<button data-logo="${i.slug}" data-face="${face}" title="${esc(i.titre)}" aria-label="${esc(i.titre)}" aria-pressed="${etat.faces[face].slug === i.slug}"><img loading="lazy" alt="" src="${SI}/icons/${i.slug}.svg"></button>`).join('');
+  info.textContent = trouves.length ? `${trouves.length === 60 ? '60 premiers résultats' : `${trouves.length} résultat${trouves.length > 1 ? 's' : ''}`} pour « ${q} ».` : `Aucun logo pour « ${q} ». Essaie le nom de la marque en anglais.`;
+}
+insp.addEventListener('click', async (e) => {
+  const b = e.target.closest('button[data-logo]'); if (!b) return;
+  const face = b.dataset.face, slug = b.dataset.logo;
+  let info;
+  if (LOGOS[slug]) info = logo(slug);
+  else {
+    const i = catalogue.find((x) => x.slug === slug);
+    try {
+      const svg = await (await fetch(`${SI}/icons/${slug}.svg`)).text();
+      info = { slug, titre: i.titre, hex: i.hex, d: svg.match(/<path d="([^"]+)"/)[1] };
+    } catch { $(`[data-etat-recherche="${face}"]`).textContent = 'Impossible de charger ce logo, réessaie.'; return; }
+  }
+  const f = etat.faces[face], ancienne = f.hex;
+  Object.assign(f, info);
+  // les couleurs qui suivaient l'ancienne marque suivent la nouvelle
+  for (const k of ['logo', 'fond', 'neonCouleur']) if (f[k] === ancienne || f[k] === visible(ancienne)) f[k] = k === 'neonCouleur' ? visible(info.hex) : info.hex;
+  const q = $(`[data-recherche="${face}"]`)?.value || '';
+  toutRendre();
+  const champ = $(`[data-recherche="${face}"]`); if (champ && q) { champ.value = q; afficherResultats(face, q); }
+});
+
+// ---------- préréglages
+const CLE_PRESETS = 'creation.presets';
+let mesPresets = stockage.lire(CLE_PRESETS, []), publies = [];
+const vignette = (e) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(scene(fusion(DEFAUT, e)));
+const carte = (p, i, origine) => `<button class="carte" data-preset="${origine}:${i}"><img alt="" src="${vignette(p.etat)}"><span>${esc(p.nom)}</span>${origine === 'mes' ? `<span class="suppr" role="button" tabindex="0" data-suppr="${i}" aria-label="Supprimer ${esc(p.nom)}">${ico('poubelle')}</span>` : ''}</button>`;
+function rendrePresets() {
+  $('#p-presets').innerHTML =
+    `<p class="titre-section">Mes préréglages</p>` + (mesPresets.length ? `<div class="cartes">${mesPresets.map((p, i) => carte(p, i, 'mes')).join('')}</div>` : `<p class="vide">Règle la scène, donne-lui un nom en bas et enregistre-la : elle apparaîtra ici.</p>`) +
+    (publies.length ? `<p class="titre-section">Publiés (presets.json)</p><div class="cartes">${publies.map((p, i) => carte(p, i, 'pub')).join('')}</div>` : '') +
+    `<p class="titre-section">Intégrés</p><div class="cartes">${PRESETS_INTEGRES.map((p, i) => carte(p, i, 'int')).join('')}</div>`;
+}
+const source = { mes: () => mesPresets, pub: () => publies, int: () => PRESETS_INTEGRES };
+$('#p-presets').addEventListener('click', (e) => {
+  const s = e.target.closest('[data-suppr]');
+  if (s) { e.stopPropagation(); const nom = mesPresets[+s.dataset.suppr].nom; mesPresets.splice(+s.dataset.suppr, 1); stockage.ecrire(CLE_PRESETS, mesPresets); rendrePresets(); retour(`« ${nom} » supprimé`); return; }
+  const b = e.target.closest('[data-preset]'); if (!b) return;
+  const [o, i] = b.dataset.preset.split(':'), p = source[o]()[+i];
+  etat = fusion(DEFAUT, p.etat); toutRendre(); retour(`« ${p.nom} » appliqué`);
+});
+$('#p-presets').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.dataset.suppr) e.target.click(); });
+$('#enregistrer').onclick = () => {
+  const champ = $('#nomPreset'), nom = champ.value.trim() || `Préréglage ${mesPresets.length + 1}`;
+  mesPresets.unshift({ nom, etat: clone(etat) }); stockage.ecrire(CLE_PRESETS, mesPresets); champ.value = ''; rendrePresets(); retour(`« ${nom} » enregistré`);
+};
+$('#nomPreset').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#enregistrer').click(); });
+const telecharger = (contenu, nom, type) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([contenu], { type })); a.download = nom; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
+$('#exporterPresets').onclick = () => {
+  if (!mesPresets.length) return retour('Aucun préréglage à exporter');
+  telecharger(JSON.stringify({ version: 1, presets: mesPresets }, null, 1), 'presets.json', 'application/json'); retour('presets.json téléchargé');
+};
+$('#importerPresets').onclick = () => $('#fichierPresets').click();
+$('#fichierPresets').onchange = async (e) => {
+  try {
+    const liste = (JSON.parse(await e.target.files[0].text()).presets || []).filter((p) => p.nom && estObjet(p.etat));
+    if (!liste.length) throw new Error();
+    mesPresets = [...liste, ...mesPresets]; stockage.ecrire(CLE_PRESETS, mesPresets); rendrePresets(); retour(`${liste.length} préréglage(s) importé(s)`);
+  } catch { retour('Fichier invalide : il faut un presets.json exporté par ce studio'); }
+  e.target.value = '';
+};
+// hébergé (GitHub Pages) : les préréglages publiés à côté de la page
+if (location.protocol.startsWith('http')) fetch('presets.json').then((r) => (r.ok ? r.json() : null)).then((j) => { if (j?.presets?.length) { publies = j.presets; rendrePresets(); } }).catch(() => {});
+
+// ---------- onglets, thème, export, partage
+document.querySelector('.onglets').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-onglet]'); if (!b) return;
+  document.querySelectorAll('[data-onglet]').forEach((x) => x.setAttribute('aria-selected', x === b));
+  const presets = b.dataset.onglet === 'presets';
+  $('#p-calques').hidden = presets; $('#p-presets').hidden = !presets; $('#pied-presets').hidden = !presets;
+  if (presets) rendrePresets();
+});
+$('#p-calques').addEventListener('click', (e) => { const b = e.target.closest('[data-calque]'); if (b) choisir(b.dataset.calque); });
+$('#apercu').addEventListener('click', (e) => { const g = e.target.closest('[data-calque]'); if (g) choisir(g.dataset.calque); });
+function appliquerTheme(t) {
+  document.documentElement.dataset.theme = t;
+  $('#theme').innerHTML = ico(t === 'clair' ? 'lune' : 'soleil');
+  $('#theme').setAttribute('aria-label', t === 'clair' ? 'Passer en thème sombre' : 'Passer en thème clair');
+}
+appliquerTheme(stockage.lire('creation.theme', 'sombre'));
+$('#theme').onclick = () => { const t = document.documentElement.dataset.theme === 'clair' ? 'sombre' : 'clair'; appliquerTheme(t); stockage.ecrire('creation.theme', t); };
+
+let tempoRetour = 0;
+const retour = (t) => { const r = $('#retour'); r.textContent = t; clearTimeout(tempoRetour); tempoRetour = setTimeout(() => (r.textContent = ''), 2600); };
+const nomFichier = () => `creation-${etat.faces.faceA.slug}${etat.animation.type === 'retournement' && etat.faces.faceB.slug !== etat.faces.faceA.slug ? '-' + etat.faces.faceB.slug : ''}.svg`;
+$('#telecharger').onclick = () => { telecharger(svgCourant, nomFichier(), 'image/svg+xml'); retour(`${nomFichier()} téléchargé`); };
+const copier = async (t, m) => { try { await navigator.clipboard.writeText(t); retour(m); } catch { retour('Copie refusée par le navigateur'); } };
+$('#copierSvg').onclick = () => copier(svgCourant, 'SVG copié');
+$('#copierMd').onclick = () => copier(`<p align="center">\n  <img src="assets/${nomFichier()}" width="100%" alt="${esc(etat.faces.faceA.titre)} entre les mains de la Création d'Adam">\n</p>`, 'Markdown copié');
+const b64 = {
+  enc: (s) => { let b = ''; for (const o of new TextEncoder().encode(s)) b += String.fromCharCode(o); return btoa(b).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); },
+  dec: (s) => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0))),
+};
+$('#lien').onclick = () => { const u = `${location.href.split('#')[0]}#e=${b64.enc(JSON.stringify(etat))}`; history.replaceState(null, '', u); copier(u, 'Lien copié : il recrée exactement cette scène'); };
+try { const h = location.hash.match(/^#e=(.+)$/); if (h) etat = fusion(DEFAUT, JSON.parse(b64.dec(h[1]))); } catch { /* lien abîmé : état par défaut */ }
+
+// ---------- rendu et lecture
+let svgCourant = '', enPause = false;
+const anims = () => $('#apercu').getAnimations({ subtree: true });
+const cycle = () => Math.max(1, ...anims().map((a) => a.effect.getTiming().duration));
+function rendreScene() {
+  svgCourant = scene(etat);
+  // l'aperçu joue toujours, même si Windows a coupé les effets d'animation (prefers-reduced-motion)
+  $('#apercu').innerHTML = svgCourant.replace('@media (prefers-reduced-motion:reduce){*{animation:none!important}}', '');
+  if (enPause) anims().forEach((a) => a.pause());
+  $('#poids').textContent = `${(new Blob([svgCourant]).size / 1024).toFixed(0)} Ko`;
+}
+function toutRendre(scene = true) {
+  const c = CALQUES.find((x) => x.id === selection);
+  if (!c || (c.si && !c.si(etat))) selection = 'faceA';
+  if (scene) rendreScene();
+  rendreCalques(); rendreInspecteur();
+}
+const btnLecture = $('#lecture'), curseurTemps = $('#temps');
+const pause = (p) => { enPause = p; anims().forEach((a) => (p ? a.pause() : a.play())); btnLecture.innerHTML = ico(p ? 'play' : 'pause'); btnLecture.setAttribute('aria-label', p ? 'Lecture' : 'Pause'); };
+btnLecture.onclick = () => pause(!enPause);
+document.addEventListener('keydown', (ev) => {
+  if (ev.code !== 'Space' || ev.target.closest('textarea,select,[contenteditable]') || (ev.target.matches('input') && !['range', 'checkbox', 'radio', 'color'].includes(ev.target.type))) return;
+  ev.preventDefault(); pause(!enPause);
+});
+$('#rejouer').onclick = () => { anims().forEach((a) => (a.currentTime = 0)); pause(false); };
+curseurTemps.addEventListener('input', () => { pause(true); const t = curseurTemps.value / 1000 * cycle(); anims().forEach((a) => (a.currentTime = t)); });
+(function suivre() {
+  const a = anims()[0];
+  if (a && a.currentTime != null) {
+    const c = cycle(), t = a.currentTime % c;
+    if (!enPause) curseurTemps.value = Math.round(t / c * 1000);
+    $('#v-temps').textContent = `${(t / 1000).toFixed(1)} / ${(c / 1000).toFixed(1)} s`;
+  }
+  requestAnimationFrame(suivre);
+})();
+toutRendre();
+</script>
+</body>
+</html>
